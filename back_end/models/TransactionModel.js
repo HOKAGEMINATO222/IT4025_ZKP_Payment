@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 // Định nghĩa schema cho giao dịch
 const transactionSchema = new mongoose.Schema(
   {
+    userID : { type: mongoose.Schema.Types.ObjectId, ref: 'TestUser', required: true }, // ID người dùng
     amount: { type: Number, required: true }, // Số tiền giao dịch
     transactionType: { type: String, required: true,  enum: ['deposit', 'withdrawal'] }, // Loại giao dịch (nạp/rút)
     transactionDate: { type: Date, default: Date.now }, // Thời gian giao dịch

@@ -5,6 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 const snarkjs = require('snarkjs');
 const connectDB = require('./config/db');
+const userRoutes = require('./routes/userRoutes'); 
 require('dotenv').config();
 
 const app = express();
@@ -28,9 +29,6 @@ const circuitsPath = path.join(__dirname, 'circuits');
 // Thiết lập tệp tĩnh cho thư mục circuits
 app.use('/circuits', express.static(circuitsPath));
 
-// Log đường dẫn circuits
-console.log('Circuits path:', circuitsPath);
-
 // Tải verification key
 const verificationKey = JSON.parse(fs.readFileSync(path.join(circuitsPath, 'verification_key.json'), 'utf-8'));
 
@@ -44,6 +42,9 @@ app.post('/payment', async (req, res) => {
         res.status(500).json({ error: 'Verification failed' });
     }
 });
+
+// Sử dụng routes cho người dùng
+app.use('/api/users', userRoutes);
 
 // Khởi động server
 const PORT = 5000;
