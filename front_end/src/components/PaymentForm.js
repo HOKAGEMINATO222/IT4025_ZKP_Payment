@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
-import { generateProof } from '../utils/snarkUtils';
-import './PaymentForm.css'; // Import file CSS để style
+import React, { useState } from "react";
+import { generateProof } from "../utils/snarkUtils";
+import "./PaymentForm.css"; // Import file CSS để style
 
-const PaymentForm = ({ onSubmitProof }) => {
-  const [balance, setBalance] = useState('');
-  const [transaction, setTransaction] = useState('');
-  const [error, setError] = useState('');
+const PaymentForm = ({ onSubmitProof, balance }) => {
+  const [transaction, setTransaction] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (Number(balance) <= Number(transaction)) {
-      setError('Số dư phải lớn hơn số tiền giao dịch!');
-      return;
-    }
+    // if (Number(balance) <= Number(transaction)) {
+    //   setError("Số dư phải lớn hơn số tiền giao dịch!");
+    //   return;
+    // }
 
-    setError('');
+    // setError("");
     try {
       const { proof, publicSignals } = await generateProof({
         a: balance,
@@ -22,8 +21,8 @@ const PaymentForm = ({ onSubmitProof }) => {
       });
       onSubmitProof(proof, publicSignals);
     } catch (err) {
-      console.error('Lỗi tạo ZKP:', err);
-      setError('Có lỗi khi tạo chứng minh ZKP!');
+      console.error("Lỗi tạo ZKP:", err);
+      setError("Có lỗi khi tạo chứng minh ZKP!");
     }
   };
 
@@ -37,9 +36,9 @@ const PaymentForm = ({ onSubmitProof }) => {
             id="balance"
             type="number"
             value={balance}
-            onChange={(e) => setBalance(e.target.value)}
             className="input"
             required
+            disabled
           />
         </div>
 
