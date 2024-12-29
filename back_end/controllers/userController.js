@@ -1,4 +1,4 @@
-const User = require('../models/userModel'); // Import model User
+const User = require('../models/User'); // Import model User
 
 // Lấy thông tin của tất cả người dùng
 const getAllUsers = async (req, res) => {
