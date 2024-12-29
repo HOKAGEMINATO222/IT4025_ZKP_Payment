@@ -1,7 +1,8 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const User = require("../models/userModel");
+const User = require("../models/UserModel");
+const Transaction = require("../models/TransactionModel");
 
 // Helper function to generate a JWT token and set it as a cookie
 const generateTokenAndSetCookie = (res, userId) => {
@@ -86,8 +87,8 @@ router.get(
     try {
       // const users = await User.find().select("-password");
       const users = await User.find();
-      const formattedUsers = users.map(user => user.toObject());
-      res.status(200).json({ success: true, formattedUsers  });
+      const formattedUsers = users.map((user) => user.toObject());
+      res.status(200).json({ success: true, formattedUsers });
     } catch (error) {
       console.error("Error fetching users:", error);
       res
@@ -119,7 +120,12 @@ router.post("/user/login", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful!",
-      user: {id: user._id, name: user.name, balance: user.balance, type: user.type },
+      user: {
+        id: user._id,
+        name: user.name,
+        balance: user.balance,
+        type: user.type,
+      },
     });
   } catch (error) {
     console.log("Error in login ", error);
@@ -151,7 +157,7 @@ router.get("/user/authenticate", authenticateUser, async (req, res) => {
     res.status(200).json({
       success: true,
       user: {
-        id: user.id, 
+        id: user.id,
         name: user.name,
         balance: user.balance,
         type: user.type,
@@ -160,6 +166,78 @@ router.get("/user/authenticate", authenticateUser, async (req, res) => {
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ success: false, message: "Failed to fetch user!" });
+  }
+});
+
+router.get("/balance/:id", async (req, res) => {
+  try {
+    const transaction = await Transaction.find({ userID: req.params.id });
+    console.log(transaction);
+    res.status(200).json(transaction);
+  } catch (error) {
+    res.status(500).json({ error: "Không thể lấy thông tin người dùng" });
+  }
+});
+
+// Payment Route
+router.post("/payment", async (req, res) => {
+  try {
+    const { proof, publicSignals, transactionAmount, userId } = req.body;
+    console.log("id:", userId);
+    // Lấy người dùng từ database theo userId
+    const user = await User.findById(userId); // Tìm người dùng theo ID
+    if (!user) {
+      return res
+        .status(404)
+        .json({ isValid: false, message: "User not found." });
+    }
+
+    const userBalance = user.balance;
+
+    // Kiểm tra tính hợp lệ của proof
+    const isValid = await snarkjs.groth16.verify(
+      verificationKey,
+      publicSignals,
+      proof
+    );
+
+    console.log("Proof verification result:", isValid);
+    console.log("publicSignals:", publicSignals);
+
+    if (isValid && publicSignals[0] === "1") {
+      // Cập nhật số dư trong database
+      const updatedBalance = userBalance - transactionAmount;
+
+      // Cập nhật số dư vào MongoDB
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { balance: updatedBalance }, // Chỉ cập nhật trường balance
+        { new: true } // Trả về đối tượng người dùng mới với balance đã cập nhật
+      );
+
+      const transaction = new Transaction({
+        userID: userId,
+        amount: transactionAmount,
+        transactionType: "withdrawal",
+        status: "success",
+      });
+
+      transaction.save();
+      // Trả về thông tin đã cập nhật
+      return res.json({
+        isValid: true,
+        updatedBalance: updatedUser.balance,
+        transaction: transaction,
+      });
+    } else {
+      return res.status(400).json({
+        isValid: false,
+        message: "Proof verification failed.",
+      });
+    }
+  } catch (error) {
+    console.error("Error verifying proof:", error);
+    res.status(500).json({ error: "Verification failed" });
   }
 });
 

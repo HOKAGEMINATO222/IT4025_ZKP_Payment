@@ -1,43 +1,24 @@
 import React, { useState, useEffect } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  TextField,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import PaymentForm from "./components/PaymentForm";
+import LoginForm from "./components/LoginForm";
+import AdminPanel from "./components/AdminPanel";
+import UserPanel from "./components/UserPanel";
 
 const App = () => {
   const [user, setUser] = useState(null); // User state
-  const [loginError, setLoginError] = useState(""); // Error state for login
-  const [users, setUsers] = useState([]); // Admin: List of users
-  const [openDialog, setOpenDialog] = useState(false); // Dialog state for new user
+  const [loginError, setLoginError] = useState(""); // Login error state
+  const [users, setUsers] = useState([]); // List of users for admin
+  const [openDialog, setOpenDialog] = useState(false); // Admin dialog state
   const [newUser, setNewUser] = useState({
     name: "",
     password: "",
     balance: "",
-  });
-  const [loading, setLoading] = useState(true); // Loading state on app load
+  }); // New user data
+  const [loading, setLoading] = useState(true); // Loading state
   const [snackbarOpen, setSnackbarOpen] = useState(false); // Snackbar visibility
   const [snackbarMessage, setSnackbarMessage] = useState(""); // Snackbar message
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // Snackbar type: success/error
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // Snackbar severity
 
-  // Check authentication on app load
+  // Authenticate user on app load
   useEffect(() => {
     const authenticateUser = async () => {
       try {
@@ -65,7 +46,7 @@ const App = () => {
     authenticateUser();
   }, []);
 
-  // Fetch users for admin view
+  // Fetch users for admin
   useEffect(() => {
     if (user && user.type === "admin") {
       const fetchUsers = async () => {
@@ -79,7 +60,7 @@ const App = () => {
           );
           const result = await response.json();
           if (response.ok) {
-            setUsers(result.users);
+            setUsers(result.formattedUsers); // Set users state
           }
         } catch (err) {
           console.error("Error fetching users:", err);
@@ -90,7 +71,7 @@ const App = () => {
     }
   }, [user]);
 
-  // Handle Login
+  // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
     const name = e.target.name.value;
@@ -105,11 +86,10 @@ const App = () => {
       });
 
       const result = await response.json();
-      console.log("Login response:", result);
       if (response.ok) {
         setUser(result.user); // Update user state
       } else {
-        setLoginError(result.message);
+        setLoginError(result.message); // Set login error
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -117,7 +97,7 @@ const App = () => {
     }
   };
 
-  // Handle Logout
+  // Handle logout
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/user/logout", {
@@ -133,7 +113,7 @@ const App = () => {
     }
   };
 
-  // Handle Admin: Create New User
+  // Handle admin creating a new user
   const handleCreateUser = async () => {
     try {
       const response = await fetch(
@@ -156,19 +136,29 @@ const App = () => {
     }
   };
 
-  const handleProofSubmission = async (proof, publicSignals, transactionAmount) => {
+  // Handle proof submission (user panel)
+  const handleProofSubmission = async (
+    proof,
+    publicSignals,
+    transactionAmount
+  ) => {
     try {
-      const response = await fetch("http://localhost:5000/payment", { 
+      const response = await fetch("http://localhost:5000/api/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proof, publicSignals, transactionAmount, userId: user.id,}),
+        body: JSON.stringify({
+          proof,
+          publicSignals,
+          transactionAmount,
+          userId: user.id,
+        }),
       });
 
       const result = await response.json();
 
       console.log("Payment verification result:", result);
 
-      if (result.isValid) { 
+      if (result.isValid) {
         setUser((prevUser) => ({
           ...prevUser,
           balance: result.updatedBalance, // Update balance
@@ -189,174 +179,47 @@ const App = () => {
     }
   };
 
+  // Handle closing the snackbar
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
-  };  
+  };
 
   // Show loading spinner while authenticating
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  // Show Login Form if not authenticated
+  // Show login form if not authenticated
   if (!user) {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h4" gutterBottom>
-          Login
-        </Typography>
-        {loginError && <Alert severity="error">{loginError}</Alert>}
-        <form onSubmit={handleLogin}>
-          <TextField
-            name="name"
-            label="Name"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            name="password"
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-          />
-          <Button type="submit" variant="contained" color="primary" fullWidth>
-            Login
-          </Button>
-        </form>
-      </Box>
-    );
+    return <LoginForm onLogin={handleLogin} loginError={loginError} />;
   }
 
-  // Show Admin Panel
+  // Show admin panel
   if (user.type === "admin") {
     return (
-      <Box>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              Admin Panel
-            </Typography>
-            <Button color="inherit" onClick={handleLogout}>
-              Logout
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box padding={3}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenDialog(true)}
-          >
-            Create User
-          </Button>
-          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogContent>
-              <TextField
-                label="Name"
-                fullWidth
-                margin="normal"
-                value={newUser.name}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, name: e.target.value }))
-                }
-              />
-              <TextField
-                label="Password"
-                fullWidth
-                margin="normal"
-                type="password"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, password: e.target.value }))
-                }
-              />
-              <TextField
-                label="Balance"
-                fullWidth
-                margin="normal"
-                type="number"
-                value={newUser.balance}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, balance: e.target.value }))
-                }
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-              <Button onClick={handleCreateUser} variant="contained">
-                Create
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <TableContainer component={Paper} sx={{ marginTop: 3 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Username</TableCell>
-                  <TableCell>Password</TableCell>
-                  <TableCell>Balance</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.name}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.password}</TableCell>
-                    <TableCell>{user.balance}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      </Box>
+      <AdminPanel
+        users={users}
+        onLogout={handleLogout}
+        openDialog={openDialog}
+        setOpenDialog={setOpenDialog}
+        newUser={newUser}
+        setNewUser={setNewUser}
+        handleCreateUser={handleCreateUser}
+      />
     );
   }
 
-  // Show User Panel
+  // Show user panel
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Welcome, {user.name}
-          </Typography>
-          <Button color="inherit" onClick={handleLogout}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
-      <div>
-        <PaymentForm
-          onSubmitProof={handleProofSubmission}
-          balance={user.balance}
-        />
-      </div>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </Box>
+    <UserPanel
+      user={user}
+      onLogout={handleLogout}
+      handleProofSubmission={handleProofSubmission}
+      snackbarOpen={snackbarOpen}
+      handleCloseSnackbar={handleCloseSnackbar}
+      snackbarMessage={snackbarMessage}
+      snackbarSeverity={snackbarSeverity}
+    />
   );
 };
 

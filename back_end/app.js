@@ -6,10 +6,10 @@ const cors = require("cors");
 const fs = require("fs");
 const snarkjs = require("snarkjs");
 const connectDB = require("./config/db");
-const db = require("./config/db"); // Import db functions
 const authenticationRoutes = require("./routes/authentication");
+const User = require("./models/UserModel"); // Import model User
+const Transaction = require("./models/TransactionModel"); // Import model User
 
-const User = require("./models/userModel"); // Import model User
 require("dotenv").config();
 
 const app = express();
@@ -62,7 +62,9 @@ app.post("/payment", async (req, res) => {
     // Lấy người dùng từ database theo userId
     const user = await User.findById(userId); // Tìm người dùng theo ID
     if (!user) {
-      return res.status(404).json({ isValid: false, message: "User not found." });
+      return res
+        .status(404)
+        .json({ isValid: false, message: "User not found." });
     }
 
     const userBalance = user.balance;
@@ -80,7 +82,7 @@ app.post("/payment", async (req, res) => {
     if (isValid && publicSignals[0] === "1") {
       // Cập nhật số dư trong database
       const updatedBalance = userBalance - transactionAmount;
-      
+
       // Cập nhật số dư vào MongoDB
       const updatedUser = await User.findByIdAndUpdate(
         userId,
@@ -88,10 +90,19 @@ app.post("/payment", async (req, res) => {
         { new: true } // Trả về đối tượng người dùng mới với balance đã cập nhật
       );
 
+      const transaction = new Transaction({
+        userID: userId,
+        amount: transactionAmount,
+        transactionType: "withdrawal",
+        status: "success",
+      });
+
+      transaction.save();
       // Trả về thông tin đã cập nhật
       return res.json({
         isValid: true,
         updatedBalance: updatedUser.balance,
+        transaction: transaction,
       });
     } else {
       return res.status(400).json({
