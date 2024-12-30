@@ -55,7 +55,7 @@ const verificationKey = JSON.parse(
 );
 
 // Payment Route
-app.post("/payment", async (req, res) => {
+app.post("/api/payment", async (req, res) => {
   try {
     const { proof, publicSignals, transactionAmount, userId } = req.body;
     console.log("id:", userId);
@@ -75,9 +75,6 @@ app.post("/payment", async (req, res) => {
       publicSignals,
       proof
     );
-
-    console.log("Proof verification result:", isValid);
-    console.log("publicSignals:", publicSignals);
 
     if (isValid && publicSignals[0] === "1") {
       // Cập nhật số dư trong database

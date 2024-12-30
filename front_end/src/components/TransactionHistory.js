@@ -61,11 +61,7 @@ const TransactionHistory = ({ user, isAdmin }) => {
   };
 
   return (
-    <Box padding={3}>
-      <Typography variant="h4" gutterBottom>
-        Transaction History
-      </Typography>
-
+    <Box padding={3} sx={{ backgroundColor: "#f5f5f5", borderRadius: "8px" }}>
       {isAdmin && (
         <Box mb={2}>
           <TextField
@@ -74,34 +70,83 @@ const TransactionHistory = ({ user, isAdmin }) => {
             value={selectedUserId}
             onChange={handleUserSelection}
             fullWidth
+            sx={{
+              backgroundColor: "#fff",
+              borderRadius: "4px",
+              boxShadow: 1,
+            }}
           />
         </Box>
       )}
 
       {loading ? (
-        <Typography>Loading...</Typography>
+        <Typography variant="h6" sx={{ textAlign: "center", color: "#888" }}>
+          Loading...
+        </Typography>
       ) : error ? (
-        <Typography color="error">{error}</Typography>
+        <Typography color="error" variant="body1" sx={{ textAlign: "center" }}>
+          {error}
+        </Typography>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: 2,
+            maxHeight: 400,
+            overflowY: "auto",
+          }}
+        >
           <Table>
-            <TableHead>
+            <TableHead sx={{ backgroundColor: "#3f51b5", color: "#fff" }}>
               <TableRow>
-                <TableCell>Transaction ID</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Date</TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Transaction ID
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Amount
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Type
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Status
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "#fff" }}>
+                  Date
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {transactions &&
                 transactions.map((transaction) => (
-                  <TableRow key={transaction._id}>
+                  <TableRow
+                    key={transaction._id}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                      },
+                    }}
+                  >
                     <TableCell>{transaction._id}</TableCell>
                     <TableCell>${transaction.amount}</TableCell>
                     <TableCell>{transaction.transactionType}</TableCell>
-                    <TableCell>{transaction.status}</TableCell>
+                    <TableCell>
+                      <Typography
+                        sx={{
+                          color:
+                            transaction.status === "success"
+                              ? "green"
+                              : transaction.status === "pending"
+                              ? "orange"
+                              : "red",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {transaction.status}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       {new Date(transaction.transactionDate).toLocaleString()}
                     </TableCell>

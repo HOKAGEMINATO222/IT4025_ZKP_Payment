@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const User = require("../models/UserModel");
 const Transaction = require("../models/TransactionModel");
+const snarkjs = require("snarkjs");
+
 
 // Helper function to generate a JWT token and set it as a cookie
 const generateTokenAndSetCookie = (res, userId) => {
@@ -179,66 +181,66 @@ router.get("/balance/:id", async (req, res) => {
   }
 });
 
-// Payment Route
-router.post("/payment", async (req, res) => {
-  try {
-    const { proof, publicSignals, transactionAmount, userId } = req.body;
-    console.log("id:", userId);
-    // Lấy người dùng từ database theo userId
-    const user = await User.findById(userId); // Tìm người dùng theo ID
-    if (!user) {
-      return res
-        .status(404)
-        .json({ isValid: false, message: "User not found." });
-    }
+// // Payment Route
+// router.post("/payment", async (req, res) => {
+//   try {
+//     const { proof, publicSignals, transactionAmount, userId } = req.body;
+//     console.log("id:", userId);
+//     // Lấy người dùng từ database theo userId
+//     const user = await User.findById(userId); // Tìm người dùng theo ID
+//     if (!user) {
+//       return res
+//         .status(404)
+//         .json({ isValid: false, message: "User not found." });
+//     }
 
-    const userBalance = user.balance;
+//     const userBalance = user.balance;
 
-    // Kiểm tra tính hợp lệ của proof
-    const isValid = await snarkjs.groth16.verify(
-      verificationKey,
-      publicSignals,
-      proof
-    );
+//     // Kiểm tra tính hợp lệ của proof
+//     const isValid = await snarkjs.groth16.verify(
+//       verificationKey,
+//       publicSignals,
+//       proof
+//     );
 
-    console.log("Proof verification result:", isValid);
-    console.log("publicSignals:", publicSignals);
+//     console.log("Proof verification result:", isValid);
+//     console.log("publicSignals:", publicSignals);
 
-    if (isValid && publicSignals[0] === "1") {
-      // Cập nhật số dư trong database
-      const updatedBalance = userBalance - transactionAmount;
+//     if (isValid && publicSignals[0] === "1") {
+//       // Cập nhật số dư trong database
+//       const updatedBalance = userBalance - transactionAmount;
 
-      // Cập nhật số dư vào MongoDB
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { balance: updatedBalance }, // Chỉ cập nhật trường balance
-        { new: true } // Trả về đối tượng người dùng mới với balance đã cập nhật
-      );
+//       // Cập nhật số dư vào MongoDB
+//       const updatedUser = await User.findByIdAndUpdate(
+//         userId,
+//         { balance: updatedBalance }, // Chỉ cập nhật trường balance
+//         { new: true } // Trả về đối tượng người dùng mới với balance đã cập nhật
+//       );
 
-      const transaction = new Transaction({
-        userID: userId,
-        amount: transactionAmount,
-        transactionType: "withdrawal",
-        status: "success",
-      });
+//       const transaction = new Transaction({
+//         userID: userId,
+//         amount: transactionAmount,
+//         transactionType: "withdrawal",
+//         status: "success",
+//       });
 
-      transaction.save();
-      // Trả về thông tin đã cập nhật
-      return res.json({
-        isValid: true,
-        updatedBalance: updatedUser.balance,
-        transaction: transaction,
-      });
-    } else {
-      return res.status(400).json({
-        isValid: false,
-        message: "Proof verification failed.",
-      });
-    }
-  } catch (error) {
-    console.error("Error verifying proof:", error);
-    res.status(500).json({ error: "Verification failed" });
-  }
-});
+//       transaction.save();
+//       // Trả về thông tin đã cập nhật
+//       return res.json({
+//         isValid: true,
+//         updatedBalance: updatedUser.balance,
+//         transaction: transaction,
+//       });
+//     } else {
+//       return res.status(400).json({
+//         isValid: false,
+//         message: "Proof verification failed.",
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error verifying proof:", error);
+//     res.status(500).json({ error: "Verification failed" });
+//   }
+// });
 
 module.exports = router;
