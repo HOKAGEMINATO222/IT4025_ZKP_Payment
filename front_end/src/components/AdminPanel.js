@@ -18,6 +18,7 @@ import {
   Paper,
   TextField,
 } from "@mui/material";
+import { useState } from "react";
 
 const AdminPanel = ({
   users,
@@ -27,7 +28,27 @@ const AdminPanel = ({
   newUser,
   setNewUser,
   handleCreateUser,
+  onDeleteUser,
 }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const handleOpenDialog = (user) => {
+    setSelectedUser(user);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedUser(null);
+    setDialogOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedUser) {
+      onDeleteUser(selectedUser._id || selectedUser.id);
+    }
+    handleCloseDialog();
+  };
   return (
     <Box>
       <AppBar position="static">
@@ -48,6 +69,8 @@ const AdminPanel = ({
         >
           Create User
         </Button>
+
+        {/* Create user panel */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Create New User</DialogTitle>
           <DialogContent>
@@ -88,6 +111,8 @@ const AdminPanel = ({
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* User's information table */}
         <TableContainer component={Paper} sx={{ marginTop: 3 }}>
           <Table>
             <TableHead>
@@ -95,6 +120,7 @@ const AdminPanel = ({
                 <TableCell>Username</TableCell>
                 <TableCell>Password</TableCell>
                 <TableCell>Balance</TableCell>
+                <TableCell>Delete user</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -104,12 +130,40 @@ const AdminPanel = ({
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.password}</TableCell>
                     <TableCell>{user.balance}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        onClick={() => handleOpenDialog(user)}
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete user "{selectedUser?.name}"?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmDelete}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -126,13 +126,47 @@ const App = () => {
         }
       );
 
+      const result = await response.json();
+
       if (response.ok) {
-        setUsers((prevUsers) => [...prevUsers, newUser]); // Update users list
+        setUsers((prevUsers) => [...prevUsers, result.user]); // Update users list
         setOpenDialog(false); // Close dialog
         setNewUser({ name: "", password: "", balance: "" }); // Reset form
       }
     } catch (err) {
       console.error("Error creating user:", err);
+    }
+  };
+
+  // Handle admin deleting a user
+  const handleDeleteUser = async (userId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/users/${userId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        setUsers((prevUsers) =>
+          prevUsers.filter((user) => user._id !== userId)
+        );
+        setSnackbarMessage("User deleted successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } else {
+        const result = await response.json();
+        setSnackbarMessage(result.message || "Failed to delete user!");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      setSnackbarMessage("An error occurred while deleting the user.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
@@ -205,6 +239,7 @@ const App = () => {
         newUser={newUser}
         setNewUser={setNewUser}
         handleCreateUser={handleCreateUser}
+        onDeleteUser={handleDeleteUser}
       />
     );
   }

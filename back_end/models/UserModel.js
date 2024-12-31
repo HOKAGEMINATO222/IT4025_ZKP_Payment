@@ -17,9 +17,8 @@ const userSchema = new mongoose.Schema({
     default: "user",
   },
   balance: {
-    type: Number,
+    type: String,
     required: true,
-    default: 1000, // Cố định số dư người dùng
   },
 });
 
