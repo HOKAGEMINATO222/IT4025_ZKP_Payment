@@ -171,11 +171,7 @@ const App = () => {
   };
 
   // Handle proof submission (user panel)
-  const handleProofSubmission = async (
-    proof,
-    publicSignals,
-    transactionAmount
-  ) => {
+  const handleProofSubmission = async (proof, publicSignals, transaction) => {
     try {
       const response = await fetch("http://localhost:5000/api/payment", {
         method: "POST",
@@ -183,19 +179,17 @@ const App = () => {
         body: JSON.stringify({
           proof,
           publicSignals,
-          transactionAmount,
+          transaction,
           userId: user.id,
         }),
       });
 
       const result = await response.json();
 
-      console.log("Payment verification result:", result);
-
       if (result.isValid) {
         setUser((prevUser) => ({
           ...prevUser,
-          balance: result.updatedBalance, // Update balance
+          balance: result.newBalanceHash, // Update balance
         }));
         setSnackbarMessage("Payment successful! Balance updated.");
         setSnackbarSeverity("success");

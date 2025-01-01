@@ -1,67 +1,100 @@
 import React, { useState } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { generateProof } from "../utils/snarkUtils";
-import "./PaymentForm.css"; // Import file CSS để style
 
-const PaymentForm = ({ onSubmitProof }) => {
+const PaymentForm = ({ onSubmitProof, serverHash }) => {
   const [transaction, setTransaction] = useState("");
-  const [balance, setBalanace] = useState("");
+  const [oldBalance, setOldBalance] = useState("");
   const [error, setError] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // if (Number(balance) <= Number(transaction)) {
-    //   setError("Số dư phải lớn hơn số tiền giao dịch!");
-    //   return;
-    // }
 
-    console.log("Số dư:", balance);
     try {
       const { proof, publicSignals } = await generateProof({
-        a: balance,
-        b: transaction,
+        oldBalance: oldBalance,
+        transaction: transaction, // Align with the circuit's input naming
+        serverHash: serverHash,
       });
       onSubmitProof(proof, publicSignals, transaction);
     } catch (err) {
-      console.error("Lỗi tạo ZKP:", err);
-      setError("Có lỗi khi tạo chứng minh ZKP!");
+      console.error("Error creating ZKP proof:", err);
+      setError("Invalid transaction!");
+      setSnackbarOpen(true);
     }
   };
 
   return (
-    <div className="payment-form">
-      <h2 className="title">Thanh toán ZKP</h2>
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-group">
-          <label htmlFor="balance">Số dư:</label>
-          <input
-            id="balance"
-            type="number"
-            value={balance}
-            onChange={(e) => setBalanace(e.target.value)}
-            className="input"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="transaction">Số tiền giao dịch:</label>
-          <input
-            id="transaction"
-            type="number"
-            value={transaction}
-            onChange={(e) => setTransaction(e.target.value)}
-            className="input"
-            required
-          />
-        </div>
-
-        {error && <p className="error">{error}</p>}
-
-        <button type="submit" className="submit-btn">
-          Tạo Chứng Minh
-        </button>
+    <Box
+      sx={{
+        maxWidth: 400,
+        margin: "auto",
+        padding: 2,
+        border: "1px solid #ddd",
+        borderRadius: 2,
+        boxShadow: 2,
+        mt: 3,
+      }}
+    >
+      <Typography variant="h5" align="center" gutterBottom>
+        ZKP Payment
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="Current Balance"
+          type="number"
+          fullWidth
+          margin="normal"
+          value={oldBalance}
+          onChange={(e) => setOldBalance(e.target.value)}
+          required
+        />
+        <TextField
+          label="Transaction Amount"
+          type="number"
+          fullWidth
+          margin="normal"
+          value={transaction}
+          onChange={(e) => setTransaction(e.target.value)}
+          required
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Submit Payment
+        </Button>
       </form>
-    </div>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 

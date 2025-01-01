@@ -39,9 +39,15 @@ const UserPanel = ({
 
   return (
     <Box sx={{ backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
-      <AppBar position="sticky" sx={{ backgroundColor: "#3f51b5", boxShadow: 2 }}>
+      <AppBar
+        position="sticky"
+        sx={{ backgroundColor: "#3f51b5", boxShadow: 2 }}
+      >
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold", fontSize: "1.2rem" }}>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, fontWeight: "bold", fontSize: "1.2rem" }}
+          >
             Welcome, {user.name}
           </Typography>
           <Button
@@ -57,7 +63,7 @@ const UserPanel = ({
       <Box sx={{ padding: 4 }}>
         <PaymentForm
           onSubmitProof={handleProofSubmission}
-          balance={user.balance}
+          serverHash={user.balance}
         />
       </Box>
 
@@ -77,7 +83,7 @@ const UserPanel = ({
             },
           }}
         >
-          Lịch sử giao dịch
+          Transaction History
         </Button>
       </Box>
 
@@ -100,7 +106,9 @@ const UserPanel = ({
         <DialogContent sx={{ padding: "20px" }}>
           <TransactionHistory user={user} isAdmin={isAdmin} />
         </DialogContent>
-        <DialogActions sx={{ padding: "10px 20px", backgroundColor: "#f5f5f5" }}>
+        <DialogActions
+          sx={{ padding: "10px 20px", backgroundColor: "#f5f5f5" }}
+        >
           <Button
             onClick={handleCloseDialog}
             color="primary"

@@ -81,8 +81,6 @@ router.post(
         type,
       });
 
-      console.log(balance);
-
       await newUser.save();
 
       res.json({ message: "User created successfully!", user: newUser });
@@ -218,7 +216,6 @@ router.get("/user/authenticate", authenticateUser, async (req, res) => {
 router.get("/transactions/:id", async (req, res) => {
   try {
     const transaction = await Transaction.find({ userID: req.params.id });
-    console.log(transaction);
     res.status(200).json(transaction);
   } catch (error) {
     res.status(500).json({ error: "Không thể lấy thông tin người dùng" });

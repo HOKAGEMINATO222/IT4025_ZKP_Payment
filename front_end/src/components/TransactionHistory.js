@@ -25,7 +25,7 @@ const TransactionHistory = ({ user, isAdmin }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/balance/${userId}`,
+        `http://localhost:5000/api/transactions/${userId}`,
         {
           method: "GET",
           credentials: "include", // Include cookies
@@ -34,8 +34,6 @@ const TransactionHistory = ({ user, isAdmin }) => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log(result);
-
         setTransactions(result); // Update transactions state
       } else {
         const errorData = await response.json();
@@ -62,6 +60,7 @@ const TransactionHistory = ({ user, isAdmin }) => {
 
   return (
     <Box padding={3} sx={{ backgroundColor: "#f5f5f5", borderRadius: "8px" }}>
+      {/* Show at admin dashboard */}
       {isAdmin && (
         <Box mb={2}>
           <TextField
