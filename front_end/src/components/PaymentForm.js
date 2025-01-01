@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { generateProof } from "../utils/snarkUtils";
 import "./PaymentForm.css"; // Import file CSS để style
 
-const PaymentForm = ({ onSubmitProof, balance }) => {
+const PaymentForm = ({ onSubmitProof }) => {
   const [transaction, setTransaction] = useState("");
+  const [balance, setBalanace] = useState("");
   const [error, setError] = useState("");
-  
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // if (Number(balance) <= Number(transaction)) {
@@ -36,10 +36,10 @@ const PaymentForm = ({ onSubmitProof, balance }) => {
           <input
             id="balance"
             type="number"
-            value={balance || ""}
+            value={balance}
+            onChange={(e) => setBalanace(e.target.value)}
             className="input"
             required
-            disabled
           />
         </div>
 
